@@ -24,6 +24,10 @@ partes) está em **https://github.com/Caiorasuckkk/luzvital**.
 - Caio Rasuck RM 93645
 - Arthur Albuquerque RM 93025
 
+## Vídeo
+
+https://youtu.be/a17KP1B8xQU
+
 ## Resultado
 
 XGBoost (`xgb-v1`) treinado de 2019 a 2023 e testado em 2024 e 2025, com limiar 0,125, escolhido para

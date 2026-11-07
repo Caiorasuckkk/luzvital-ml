@@ -58,7 +58,7 @@ def prever(pacote: dict, dia: date, clima: dict) -> dict:
     X = montar_atributos(df).loc[[indice[-1]], pacote["atributos"]]
 
     p_modelo = float(pacote["modelo"].predict_proba(X)[:, 1][0])
-    score = para_probabilidade_api(p_modelo, pacote["limiar"], pacote["limiar_alto"])  # score de risco, não probabilidade
+    score = para_probabilidade_api(p_modelo, pacote["limiar"], pacote["limiar_alto"])
     nivel = "Alto" if score >= 0.7 else ("Atencao" if score >= 0.4 else "Baixo")
     # o campo do contrato se chama "probabilidade", mas o valor é o score de risco (0 a 1)
     return {"corpo": {"data": dia.isoformat(), "probabilidade": round(score, 3), "versaoModelo": pacote["versao"]},
@@ -71,7 +71,7 @@ def enviar(url: str, corpo: dict) -> None:
     except requests.RequestException as e:
         print(f"\nAPI fora do ar ({url}): {e.__class__.__name__}. Nada foi enviado; o JSON está acima.")
         return
-    print(f"\nPOST {url} → HTTP {r.status_code}")
+    print(f"\nPOST {url}: HTTP {r.status_code}")
     print(r.text[:1000])
 
 
@@ -109,9 +109,9 @@ def main() -> int:
     pacote = joblib.load(MODELO)
     r = prever(pacote, a.data, clima)
 
-    print(f"Modelo {pacote['versao']} · probabilidade do modelo {r['probabilidade_modelo']:.3f} "
+    print(f"Modelo {pacote['versao']}, probabilidade do modelo {r['probabilidade_modelo']:.3f} "
           f"(limiar {pacote['limiar']:.3f}, alto {pacote['limiar_alto']:.3f})")
-    print(f"Score de risco (0 a 1) enviado à API: {r['score_risco']:.3f} · nível esperado: {r['nivel_esperado']} "
+    print(f"Score de risco (0 a 1) enviado à API: {r['score_risco']:.3f}, nível esperado: {r['nivel_esperado']} "
           f"(o score não é chance de apagão; veja RELATORIO_ML.md, seção 5)")
     print(json.dumps(r["corpo"], ensure_ascii=False))
     if not a.nao_enviar:

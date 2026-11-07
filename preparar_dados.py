@@ -47,7 +47,6 @@ COLS_ANEEL = [
 ESTACAO = "A701"
 
 
-# ---------------------------------------------------------------- ANEEL
 def processar_aneel_ano(ano: int) -> tuple[pd.DataFrame, dict]:
     caminho = BRUTOS / "aneel" / f"interrupcoes-energia-eletrica-{ano}.zip"
     partes = []
@@ -97,11 +96,10 @@ def processar_aneel() -> pd.DataFrame:
     diario = diario.reindex(idx, fill_value=0).astype("int64")
     PROC.mkdir(parents=True, exist_ok=True)
     diario.to_csv(PROC / "aneel_diario.csv")
-    print(f"  -> dados/processados/aneel_diario.csv ({len(diario)} dias)")
+    print(f"  salvo em dados/processados/aneel_diario.csv ({len(diario)} dias)")
     return diario
 
 
-# ---------------------------------------------------------------- INMET
 def _coluna(df: pd.DataFrame, *trechos: str) -> str:
     """Acha a coluna cujo nome (em maiúsculas) contém todos os trechos. Falha se não achar ou se for ambíguo."""
     achadas = [c for c in df.columns if all(t in c.upper() for t in trechos)]
@@ -174,11 +172,10 @@ def processar_inmet() -> pd.DataFrame:
     diario["horas_com_dado"] = diario["horas_com_dado"].fillna(0).astype(int)
     PROC.mkdir(parents=True, exist_ok=True)
     diario.round(2).to_csv(PROC / "inmet_diario.csv")
-    print(f"  -> dados/processados/inmet_diario.csv ({len(diario)} dias, {diario['rajada_max_ms'].isna().sum()} sem rajada)")
+    print(f"  salvo em dados/processados/inmet_diario.csv ({len(diario)} dias, {diario['rajada_max_ms'].isna().sum()} sem rajada)")
     return diario
 
 
-# ---------------------------------------------------------------- junção
 def juntar() -> pd.DataFrame:
     aneel = pd.read_csv(PROC / "aneel_diario.csv", parse_dates=["data"], index_col="data")
     inmet = pd.read_csv(PROC / "inmet_diario.csv", parse_dates=["data"], index_col="data")

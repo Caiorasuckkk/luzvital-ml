@@ -1,0 +1,38 @@
+{
+  "versao": "xgb-v1",
+  "tipo": "XGBoost",
+  "atributos": [
+    "rajada_max_ms",
+    "vento_max_ms",
+    "chuva_mm",
+    "pressao_min_mb",
+    "queda_pressao_mb",
+    "temp_max_c",
+    "umid_min_pct",
+    "chuva_3d_ant",
+    "mes_sin",
+    "mes_cos"
+  ],
+  "limiar": 0.12454994022846222,
+  "limiar_alto": 0.4607660472393036,
+  "limite_rotulo_ucs": 316590.75,
+  "treino": "2019-01-01 a 2023-12-31 (sem os dias de falha do anemômetro)",
+  "hiperparametros": {
+    "learning_rate": 0.03,
+    "max_depth": 2,
+    "n_estimators": 150,
+    "scale_pos_weight": 5.6
+  },
+  "metricas_teste": {
+    "PR-AUC": 0.3139,
+    "recall": 0.6222,
+    "precisão": 0.2718,
+    "F1": 0.3784
+  },
+  "matriz_confusao_teste": {
+    "vn": 611,
+    "fp": 75,
+    "fn": 17,
+    "vp": 28
+  }
+}

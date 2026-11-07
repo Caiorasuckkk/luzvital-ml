@@ -1,0 +1,6 @@
+# Arquivos brutos (ANEEL ~1,6 GB e INMET ~700 MB): baixe com python baixar_dados.py
+dados/brutos/
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+*.parcial

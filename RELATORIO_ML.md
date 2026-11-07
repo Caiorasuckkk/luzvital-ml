@@ -76,21 +76,27 @@ teste.
 
 ## 5. Escolha do modelo e do limiar
 
-**Modelo: XGBoost (`xgb-v1`).** Foi o melhor na validação cruzada, que é o critério definido antes de olhar o
-teste. Os três praticamente empatam na validação (as diferenças são menores que o desvio entre dobras); no
-limiar escolhido, o XGBoost avisa mais apagões: 28 dos 45 no teste, contra 21 da logística. A logística teve
-PR-AUC de teste maior, e trocar de modelo depois de ver isso seria escolher pelo teste.
+**Modelo: XGBoost (`xgb-v1`).** Na validação cruzada, que é o critério definido antes de olhar o teste, os
+três modelos empatam estatisticamente: a diferença entre o XGBoost (0,355) e a logística (0,342) é bem
+menor que o desvio entre dobras (0,18 a 0,25). Com o desempenho empatado, decidimos pelo produto: ficamos com
+o modelo que avisa mais apagões, porque para quem depende de energia perder um apagão custa mais que um
+alarme falso. Na validação, o XGBoost teve recall de 0,64 no seu limiar, contra 0,52 da logística; no teste,
+avisou 28 dos 45 apagões, contra 21. A logística teve PR-AUC de teste maior, e trocar de modelo depois de ver
+isso seria escolher pelo teste.
 
 **Limiar pensando no cidadão.** Um alarme falso custa pouco (carregar a bateria, falar com um vizinho). Um
 apagão sem aviso pode custar uma vida. Por isso o limiar maximiza o **F2**, que pesa o recall o dobro da
 precisão, calculado nas probabilidades fora da dobra do treino: **0,125**. Um segundo limiar, o que maximiza
 o F1, marca o risco Alto: **0,461**.
 
-**Faixas da API.** A API abre alerta a partir de 0,4 (Atenção) e marca Alto a partir de 0,7. Em vez de mudar
-a API, o `enviar_previsao.py` converte a probabilidade do modelo com uma função linear por partes que leva
-0,125 para 0,4 e 0,461 para 0,7, sem mudar a ordem entre os dias. A regra da API passa a valer exatamente com
-os limiares escolhidos. Testamos com a API rodando: um dia de temporal chegou como Alto e abriu alerta, e um
-dia calmo chegou como Baixo, sem alerta.
+**Score de risco (0 a 1) enviado à API.** A API abre alerta a partir de 0,4 (Atenção) e marca Alto a partir
+de 0,7. O `enviar_previsao.py` não envia a probabilidade do modelo, e sim um **score de risco de 0 a 1**: uma
+conversão linear por partes leva a faixa de 0 a 0,125 para 0 a 0,4, a de 0,125 a 0,461 para 0,4 a 0,7 e a de
+0,461 a 1 para 0,7 a 1. Assim os nossos limiares caem exatamente nos cortes da API, e a ordem entre os dias
+não muda. **O score não é chance de apagão:** um score de 0,82 diz que o dia está na faixa Alto, não que há
+82% de chance (no teste, 15 dos 32 dias com score Alto foram apagão). O campo do JSON continua se chamando
+`probabilidade` porque é o contrato da API. Testamos com a API rodando: um dia de temporal chegou como Alto e
+abriu alerta, e um dia calmo chegou como Baixo, sem alerta.
 
 **Teste (2024 e 2025), limiar 0,125:**
 
@@ -100,8 +106,8 @@ dia calmo chegou como Baixo, sem alerta.
 
 Matriz de confusão: 611 verdadeiros negativos, 75 falsos positivos, 17 falsos negativos e 28 verdadeiros
 positivos. São cerca de 52 alertas por ano. Os 5 apagões com mais de 1 milhão de UCs foram todos avisados, e
-8 dos 10 maiores. 11/10/2024 e 10/12/2025 chegariam à API como Alto (0,86 e 0,81). Na faixa Alto, 15 de 32
-dias foram apagão; na faixa Atenção, 13 de 71.
+8 dos 10 maiores. 11/10/2024 e 10/12/2025 chegariam à API como Alto (score 0,86 e 0,81). Na faixa Alto, 15 de
+32 dias foram apagão; na faixa Atenção, 13 de 71.
 
 Os 17 perdidos foram, na maioria, dias sem temporal no Mirante (rajada mediana de 9,2 m/s e chuva de 0,6
 mm, contra 14,1 m/s e 12,3 mm nos avisados). As causas prováveis são temporal localizado longe da estação,

@@ -86,4 +86,10 @@ python enviar_previsao.py --exemplo temporal --nao-enviar   # só imprime o JSON
 
 Se a API estiver fora do ar, o script imprime o JSON e avisa que nada foi enviado.
 
+**O que vai no campo `probabilidade`.** O script envia um **score de risco (0 a 1)**, não a probabilidade do
+modelo. Uma conversão linear por partes leva o limiar de alerta do modelo (0,125) para 0,4 e o limiar alto
+(0,461) para 0,7, que são os cortes de Atenção e Alto da API, e estica em linha reta o que fica entre eles.
+Um score de 0,82 quer dizer que o dia está na faixa Alto, **não** que há 82% de chance de apagão. O campo
+continua se chamando `probabilidade` porque é o contrato da API.
+
 Dados: as bases são públicas (ANEEL e INMET) e reais; nada no modelo é simulado.

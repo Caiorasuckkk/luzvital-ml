@@ -6,9 +6,14 @@ observada nos 3 dias anteriores. Saída: o JSON do contrato da API
     POST http://localhost:5131/api/previsoes
     { "data": "2026-11-20", "probabilidade": 0.82, "versaoModelo": "xgb-v1" }
 
-A probabilidade enviada já está na escala das faixas da API (0,4 = Atenção, 0,7 = Alto): veja
-para_probabilidade_api em luzvital.py e a seção 7 do notebook. Se a API estiver fora do ar, o script só
-imprime o JSON.
+O valor enviado no campo "probabilidade" NÃO é a probabilidade do modelo: é um score de risco (0 a 1)
+na escala das faixas da API. A probabilidade do modelo passa por uma conversão linear por partes
+(para_probabilidade_api em luzvital.py): o limiar de alerta 0,125 vira 0,4 (Atenção) e o limiar alto
+0,461 vira 0,7 (Alto), e o que fica entre eles é esticado em linha reta. A ordem entre os dias não muda,
+mas um score de 0,82 não quer dizer 82% de chance de apagão; quer dizer que o dia está na faixa Alto.
+O campo continua se chamando "probabilidade" porque esse é o contrato da API.
+
+Se a API estiver fora do ar, o script só imprime o JSON.
 
 Exemplos:
     python enviar_previsao.py --data 2026-11-20 --rajada 19 --vento 6 --chuva 25 --pressao-min 917 \
@@ -53,10 +58,11 @@ def prever(pacote: dict, dia: date, clima: dict) -> dict:
     X = montar_atributos(df).loc[[indice[-1]], pacote["atributos"]]
 
     p_modelo = float(pacote["modelo"].predict_proba(X)[:, 1][0])
-    p_api = para_probabilidade_api(p_modelo, pacote["limiar"], pacote["limiar_alto"])
-    nivel = "Alto" if p_api >= 0.7 else ("Atencao" if p_api >= 0.4 else "Baixo")
-    return {"corpo": {"data": dia.isoformat(), "probabilidade": round(p_api, 3), "versaoModelo": pacote["versao"]},
-            "probabilidade_modelo": round(p_modelo, 4), "nivel_esperado": nivel}
+    score = para_probabilidade_api(p_modelo, pacote["limiar"], pacote["limiar_alto"])  # score de risco, não probabilidade
+    nivel = "Alto" if score >= 0.7 else ("Atencao" if score >= 0.4 else "Baixo")
+    # o campo do contrato se chama "probabilidade", mas o valor é o score de risco (0 a 1)
+    return {"corpo": {"data": dia.isoformat(), "probabilidade": round(score, 3), "versaoModelo": pacote["versao"]},
+            "probabilidade_modelo": round(p_modelo, 4), "score_risco": round(score, 3), "nivel_esperado": nivel}
 
 
 def enviar(url: str, corpo: dict) -> None:
@@ -104,7 +110,9 @@ def main() -> int:
     r = prever(pacote, a.data, clima)
 
     print(f"Modelo {pacote['versao']} · probabilidade do modelo {r['probabilidade_modelo']:.3f} "
-          f"(limiar {pacote['limiar']:.3f}, alto {pacote['limiar_alto']:.3f}) · nível esperado na API: {r['nivel_esperado']}")
+          f"(limiar {pacote['limiar']:.3f}, alto {pacote['limiar_alto']:.3f})")
+    print(f"Score de risco (0 a 1) enviado à API: {r['score_risco']:.3f} · nível esperado: {r['nivel_esperado']} "
+          f"(o score não é chance de apagão; veja RELATORIO_ML.md, seção 5)")
     print(json.dumps(r["corpo"], ensure_ascii=False))
     if not a.nao_enviar:
         enviar(a.url, r["corpo"])

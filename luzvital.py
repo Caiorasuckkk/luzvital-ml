@@ -52,11 +52,12 @@ def montar_atributos_vespera(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def para_probabilidade_api(p: float, limiar: float, limiar_alto: float) -> float:
-    """Converte a probabilidade do modelo para a escala de faixas da API (0,4 = Atenção, 0,7 = Alto).
+    """Converte a probabilidade do modelo no score de risco (0 a 1) enviado à API (0,4 = Atenção, 0,7 = Alto).
 
     A API abre alerta a partir de 0,4, mas o limiar escolhido para o cidadão não é 0,4. Esta
     conversão é monótona e linear por partes: o limiar do modelo vira 0,4 e o limiar alto vira 0,7,
     assim a regra da API passa a valer exatamente com os limiares escolhidos no notebook.
+    O resultado é um score, não uma probabilidade: 0,82 não significa 82% de chance de apagão.
     """
     p = float(min(max(p, 0.0), 1.0))
     if p < limiar:

@@ -1,6 +1,6 @@
 # Dados
 
-Todas as bases são públicas e reais. Nada aqui é simulado.
+Todas as bases são públicas e reais.
 
 | Pasta | O que tem | No git? |
 | --- | --- | --- |
@@ -14,19 +14,19 @@ Os processados são gerados por `python preparar_dados.py`.
 
 ## 1. ANEEL: Interrupções de Energia Elétrica nas Redes de Distribuição
 
-- **Fonte:** Agência Nacional de Energia Elétrica (ANEEL), Portal de Dados Abertos.
-- **Página:** https://dadosabertos.aneel.gov.br/dataset/interrupcoes-de-energia-eletrica-nas-redes-de-distribuicao
-- **Arquivos:** `interrupcoes-energia-eletrica-2019.zip` a `interrupcoes-energia-eletrica-2025.zip` (um CSV
+- Fonte: Agência Nacional de Energia Elétrica (ANEEL), Portal de Dados Abertos.
+- Página: https://dadosabertos.aneel.gov.br/dataset/interrupcoes-de-energia-eletrica-nas-redes-de-distribuicao
+- Arquivos: `interrupcoes-energia-eletrica-2019.zip` a `interrupcoes-energia-eletrica-2025.zip` (um CSV
   nacional por ano, `;`, UTF-8, cerca de 2,4 GB descompactado por ano). Os endereços exatos estão em
   `baixar_dados.py`, tirados da API do catálogo (CKAN).
-- **Data do download:** 07/11/2026. Na página, os arquivos de 2019 a 2025 constam como atualizados em
+- Data do download: 07/11/2026. Na página, os arquivos de 2019 a 2025 constam como atualizados em
   04/08/2026 (o campo `DatGeracaoConjuntoDados` dos arquivos diz 24/07/2026).
-- **Dicionário de dados:** usamos o "Dicionário de dados (dados até dez/2025)", versão 1.0 de 11/10/2022,
+- Dicionário de dados: usamos o "Dicionário de dados (dados até dez/2025)", versão 1.0 de 11/10/2022,
   que vale para os anos usados. O dicionário "a partir de jan/2026" renomeia os campos
-  (`QtdConsumidoresAfetados`, `NomAgente` etc.) e não se aplica a 2019–2025. Os nomes abaixo foram
+  (`QtdConsumidoresAfetados`, `NomAgente` etc.) e não se aplica a 2019 a 2025. Os nomes abaixo foram
   conferidos no cabeçalho real dos arquivos.
 
-**Colunas usadas**
+### Colunas usadas
 
 | Coluna | Uso |
 | --- | --- |
@@ -40,29 +40,29 @@ Os processados são gerados por `python preparar_dados.py`.
 O dicionário chama a última coluna de `IdeMotivoExpurgo`; no arquivo ela aparece como
 `IdeMotivoInterrupcao`, com os mesmos códigos.
 
-**Leitura:** em pedaços de 2 milhões de linhas e só com as colunas acima (`preparar_dados.py`), porque os
+A leitura é feita em pedaços de 2 milhões de linhas e só com as colunas acima (`preparar_dados.py`), porque os
 arquivos são nacionais. A Enel SP tem de 237 mil (2020) a 474 mil (2025) registros por ano, dos quais de
 225 mil a 463 mil são não programados.
 
-**`aneel_diario.csv`:** `data`, `ucs_atingidas` (soma de `NumUnidadeConsumidora` das interrupções não
+O `aneel_diario.csv` tem `data`, `ucs_atingidas` (soma de `NumUnidadeConsumidora` das interrupções não
 programadas que começaram no dia), `n_interrupcoes`, `ucs_expurgo_dia_critico`. São 2.557 dias, de
 01/01/2019 a 31/12/2025, sem nenhum dia faltando.
 
 ## 2. INMET: dados históricos da estação automática A701
 
-- **Fonte:** Instituto Nacional de Meteorologia (INMET), Banco de Dados Meteorológicos.
-- **Página:** https://portal.inmet.gov.br/dadoshistoricos
-- **Arquivos:** `2019.zip` a `2025.zip` (`https://portal.inmet.gov.br/uploads/dadoshistoricos/<ano>.zip`),
+- Fonte: Instituto Nacional de Meteorologia (INMET), Banco de Dados Meteorológicos.
+- Página: https://portal.inmet.gov.br/dadoshistoricos
+- Arquivos: `2019.zip` a `2025.zip` (`https://portal.inmet.gov.br/uploads/dadoshistoricos/<ano>.zip`),
   um ZIP por ano com o CSV horário de todas as estações automáticas. Usamos só
   `INMET_SE_SP_A701_SAO PAULO - MIRANTE_01-01-<ano>_A_31-12-<ano>.CSV`.
-- **Estação:** A701, São Paulo – Mirante de Santana, latitude −23,496, longitude −46,620, altitude 785,64 m.
-- **Data do download:** 07/11/2026, pelo navegador. O portal do INMET recusa conexões de clientes
+- Estação: A701, São Paulo, Mirante de Santana, latitude -23,496, longitude -46,620, altitude 785,64 m.
+- Data do download: 07/11/2026, pelo navegador. O portal do INMET recusa conexões de clientes
   automáticos (a conexão é derrubada até na página inicial), então `baixar_dados.py` tenta e, se falhar,
   explica onde salvar os arquivos baixados à mão.
-- **Formato:** 8 linhas de cabeçalho da estação, depois `;`, latin-1, decimal com vírgula, data
+- Formato: 8 linhas de cabeçalho da estação, depois `;`, latin-1, decimal com vírgula, data
   `AAAA/MM/DD` e hora `HHMM UTC`. `-9999` é nulo. Mesmos nomes de coluna nos 7 anos.
 
-**Colunas usadas e agregação por dia**
+### Colunas usadas e agregação por dia
 
 | Atributo diário | Coluna do INMET | Agregação |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ programadas que começaram no dia), `n_interrupcoes`, `ucs_expurgo_dia_critico`.
 | `umid_min_pct` | `UMIDADE REL. MIN. NA HORA ANT. (AUT) (%)` | mínimo |
 | `horas_com_dado` | (conta de horas com rajada) | controle de qualidade |
 
-As horas são convertidas de UTC para o horário de São Paulo (UTC−3, sem horário de verão desde 2019) antes
+As horas são convertidas de UTC para o horário de São Paulo (UTC-3, sem horário de verão desde 2019) antes
 de agregar, para o dia bater com o da ANEEL. A queda em 3 h é calculada numa grade horária completa (hora
 faltante vira vazio), então é sempre um intervalo de 3 horas.
 
